@@ -12,6 +12,18 @@ namespace EnFutureTowerXm
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
+        GameLogic gameLogic;
+        Button startButton;
+        Button stopButton;
+        Chronometer chronometer;
+        TextView textViewGameStatus;
+        TextView textViewHealth;
+        ChronometerControl chronometerControl;
+        RadioGroup radioGroup;
+
+        TextView textViewAttackersCount;
+        TextView textViewDefendersCount;
+        TextView TextViewForce;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -21,8 +33,88 @@ namespace EnFutureTowerXm
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
 
-            FloatingActionButton fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
-            fab.Click += FabOnClick;
+            ImageView imageViewTower = FindViewById<ImageView>(Resource.Id.imageViewTower);
+            TowerView towerView = new TowerView(imageViewTower);
+            gameLogic = new GameLogic();
+            gameLogic.tower.HPChanged += towerView.OnHPChanged;
+            gameLogic.GameStateChanged += (s, e) => { textViewGameStatus.Text = e.statusText; };
+
+            chronometer = FindViewById<Chronometer>(Resource.Id.chronometer1);
+            chronometerControl = new ChronometerControl(chronometer, 10 * 60 * 1000);
+
+            gameLogic.GameStateChanged += chronometerControl.GameStateChangedHandler;
+            gameLogic.GameTick += GameLogic_GameTick;
+
+            textViewGameStatus = FindViewById<TextView>(Resource.Id.textViewGameStatus);
+
+            textViewHealth = FindViewById<TextView>(Resource.Id.textViewSimpleHealth);
+            textViewHealth.Text = gameLogic.Max_HP.ToString();
+            gameLogic.tower.HPChanged += (s, e) => { textViewHealth.Text = e.HP.ToString(); };
+
+
+            startButton = FindViewById<Button>(Resource.Id.buttonStartPause);
+            stopButton = FindViewById<Button>(Resource.Id.buttonStop);
+
+            startButton.Click += StartButton_Click;
+            startButton.Text = "Старт";
+
+            radioGroup = FindViewById<RadioGroup>(Resource.Id.radioGroup1);
+
+
+            textViewAttackersCount = FindViewById<TextView>(Resource.Id.textViewAttackCount);
+            textViewDefendersCount = FindViewById<TextView>(Resource.Id.textViewDefenceCount);
+            TextViewForce = FindViewById<TextView>(Resource.Id.textViewForce);
+
+
+        }
+
+        private void GameLogic_GameTick(object sender, GameTickEventArgs e)
+        {
+            textViewAttackersCount.Text = e.attackersCount.ToString();
+            textViewDefendersCount.Text = e.defendersCount.ToString();
+            TextViewForce.Text = e.currentForce.ToString();
+        }
+
+        /*
+                private void Chronometer_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
+                {
+                    if (chronometer.Base == SystemClock.ElapsedRealtime())
+                    {
+                        gameLogic.StopGame();
+                    }
+                }
+        */
+
+        private void StartButton_Click(object sender, EventArgs e)
+        {
+           
+            if(gameLogic.gameState == GameState.IDLE)
+            {
+                textViewGameStatus.Text = "Игра!";
+                switch (radioGroup.CheckedRadioButtonId)
+                {
+                    case Resource.Id.radioButtonRed:
+                        gameLogic.SetTeam(new Team(Team.TeamColor.RED));
+                        break;
+                    case Resource.Id.radioButtonGreen:
+                        gameLogic.SetTeam(new Team(Team.TeamColor.BLUE));
+                        break;
+                }
+                startButton.Text = "Пауза";
+                gameLogic.StartGame();
+            }
+            else if (gameLogic.gameState == GameState.PLAY)
+            {
+                textViewGameStatus.Text = "Пауза";
+                startButton.Text = "Возобновить";
+                gameLogic.PauseGame();
+            }
+            else if (gameLogic.gameState == GameState.PAUSE)
+            {
+                textViewGameStatus.Text = "Игра!";
+                startButton.Text = "Пауза";
+                gameLogic.PauseGame();
+            }
         }
 
         public override bool OnCreateOptionsMenu(IMenu menu)
