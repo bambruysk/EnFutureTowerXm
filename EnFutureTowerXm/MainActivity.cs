@@ -90,7 +90,7 @@ namespace EnFutureTowerXm
            
             if(gameLogic.gameState == GameState.IDLE)
             {
-                textViewGameStatus.Text = "Игра!";
+
                 switch (radioGroup.CheckedRadioButtonId)
                 {
                     case Resource.Id.radioButtonRed:
@@ -105,15 +105,15 @@ namespace EnFutureTowerXm
             }
             else if (gameLogic.gameState == GameState.PLAY)
             {
-                textViewGameStatus.Text = "Пауза";
+
                 startButton.Text = "Возобновить";
                 gameLogic.PauseGame();
             }
             else if (gameLogic.gameState == GameState.PAUSE)
             {
-                textViewGameStatus.Text = "Игра!";
+
                 startButton.Text = "Пауза";
-                gameLogic.PauseGame();
+                gameLogic.ResumeGame();
             }
         }
 

@@ -115,6 +115,13 @@ namespace EnFutureTowerXm
 
         }
 
+        public void ResumeGame()
+        {
+            finder.FindStart();
+            gameState = GameState.PLAY;
+            GameStateChanged(this, new GameStateChangedEventArgs("Игра запущена", GameState.PLAY));
+        }
+
         // Call every game cycle
         public void Tick()
         {
