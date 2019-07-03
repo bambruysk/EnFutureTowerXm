@@ -63,11 +63,7 @@ namespace EnFutureTowerXm
                         Stop();
                         break;
                     }
-                case GameState.PAUSE:
-                    {
-                        Pause();
-                        break;
-                    }
+
                 case GameState.PLAY:
                     {
                         Start();

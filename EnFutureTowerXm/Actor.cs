@@ -14,6 +14,9 @@ namespace EnFutureTowerXm
 {
     public interface IActor
     {
+        void TickTimeout();
+
+        int GetTimeout();
 
 
 

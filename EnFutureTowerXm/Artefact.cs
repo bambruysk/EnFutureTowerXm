@@ -14,7 +14,7 @@ namespace EnFutureTowerXm
 {
     class Artefact : IActor
     {
-        public enum ArtefactType { HEAL_ONETEME, HEAL_PERMANENT, BOMB, POISON }
+        public enum ArtefactType { HEAL_ONETEME, HEAL_PERMANENT, BOMB, POISON,IMMUNE }
         public ArtefactType Type { get; }
 
 
@@ -22,12 +22,26 @@ namespace EnFutureTowerXm
         public int cooldown;
         public int powerValue;
 
+        public int timeout = 5;
+        public bool disabled;
+        public int currentCoolDown;
 
         public Artefact (ArtefactType type, int powerValue, int cooldown )
         {
             Type = type;
+            this.cooldown = cooldown;
+            this.powerValue = powerValue;
+
         }
 
+        public void TickTimeout()
+        {
+            timeout--;
+        }
 
+        public int GetTimeout()
+        {
+           return timeout;
+        }
     }
 }

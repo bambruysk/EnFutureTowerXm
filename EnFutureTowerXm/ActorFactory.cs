@@ -51,6 +51,11 @@ namespace EnFutureTowerXm
                 {
                     return new Artefact(Artefact.ArtefactType.POISON, value, cooldown);
                 }
+                if (row.ArtefactType == "IMMUNE")
+                {
+                    return new Artefact(Artefact.ArtefactType.IMMUNE, value, cooldown);
+                }
+
             }
             return null;
         }

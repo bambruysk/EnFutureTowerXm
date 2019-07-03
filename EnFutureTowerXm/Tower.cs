@@ -38,17 +38,18 @@ namespace EnFutureTowerXm
             {
                 isDead = true;
             }
-            if (HPChanged != null)
-                HPChanged(this, new TowerHPChangeEventArgs(HP));
+            HPChanged?.Invoke(this, new TowerHPChangeEventArgs(HP));
         }
 
         public void Heal(int heal)
         {
             HP += heal;
             if (HP > Max_HP)
+            {
                 HP = Max_HP;
-            if (HPChanged != null)
-                HPChanged(this, new TowerHPChangeEventArgs(HP));
+            }
+
+            HPChanged?.Invoke(this, new TowerHPChangeEventArgs(HP));
         }
     }
 }

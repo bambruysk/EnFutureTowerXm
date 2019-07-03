@@ -15,9 +15,21 @@ namespace EnFutureTowerXm
     public class Player : IActor
     {
         public Team Team { get; }
+        public int timeout;
         public Player (Team team)
         {
+            timeout = 5;
             Team = team;
+        }
+
+        public void TickTimeout()
+        {
+            timeout--; 
+        }
+
+        public int GetTimeout()
+        {
+            return timeout;
         }
     }
 }

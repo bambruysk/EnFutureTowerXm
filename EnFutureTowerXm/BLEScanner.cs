@@ -24,7 +24,7 @@ namespace EnFutureTowerXm
     {
         private Timer timer;
         private IBluetoothLE ble;
-        private Plugin.BLE.Abstractions.Contracts.IAdapter adapter;
+        public Plugin.BLE.Abstractions.Contracts.IAdapter adapter;
         private List<BLEDeviceView> deviceList;
 
         public int MinRssi;
@@ -35,7 +35,7 @@ namespace EnFutureTowerXm
 
             timer = new Timer
             {
-                Interval = 15000
+                Interval = 1000
             };
             timer.Elapsed += OnTimerTick;
 
@@ -48,6 +48,7 @@ namespace EnFutureTowerXm
             adapter.DeviceDiscovered += (s, a) =>
             {
                 Console.WriteLine("DeviceFound");
+
                 if (a.Device.Rssi >= MinRssi)
                 {
                     if (deviceList.Exists(d => d.id == a.Device.Id))
@@ -81,7 +82,7 @@ namespace EnFutureTowerXm
             {
                 await adapter.StartScanningForDevicesAsync();
             }
-            ProcessDevices();
+            // ProcessDevices();
         }
 
         public void ResumeScan()

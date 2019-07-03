@@ -24,7 +24,7 @@ namespace EnFutureTowerXm
         TextView textViewAttackersCount;
         TextView textViewDefendersCount;
         TextView TextViewForce;
-
+        TowerView towerView;
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -34,7 +34,8 @@ namespace EnFutureTowerXm
             SetSupportActionBar(toolbar);
 
             ImageView imageViewTower = FindViewById<ImageView>(Resource.Id.imageViewTower);
-            TowerView towerView = new TowerView(imageViewTower);
+            towerView = new TowerView(imageViewTower);
+
             gameLogic = new GameLogic();
             gameLogic.tower.HPChanged += towerView.OnHPChanged;
             gameLogic.GameStateChanged += (s, e) => { textViewGameStatus.Text = e.statusText; };
@@ -65,7 +66,15 @@ namespace EnFutureTowerXm
             textViewDefendersCount = FindViewById<TextView>(Resource.Id.textViewDefenceCount);
             TextViewForce = FindViewById<TextView>(Resource.Id.textViewForce);
 
+            gameLogic.finder.bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
 
+
+        }
+
+        private void Adapter_DeviceDiscovered(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
+        {
+            Toast toast = Toast.MakeText(this, "Device Found" + e.Device.Id.ToString(), ToastLength.Long );
+            toast.Show();
         }
 
         private void GameLogic_GameTick(object sender, GameTickEventArgs e)
@@ -73,6 +82,7 @@ namespace EnFutureTowerXm
             textViewAttackersCount.Text = e.attackersCount.ToString();
             textViewDefendersCount.Text = e.defendersCount.ToString();
             TextViewForce.Text = e.currentForce.ToString();
+            textViewHealth.Text = gameLogic.tower.HP.ToString();
         }
 
         /*
@@ -99,22 +109,20 @@ namespace EnFutureTowerXm
                     case Resource.Id.radioButtonGreen:
                         gameLogic.SetTeam(new Team(Team.TeamColor.BLUE));
                         break;
+                    default:
+                        gameLogic.SetTeam(new Team(Team.TeamColor.RED));
+                        break;
                 }
-                startButton.Text = "Пауза";
+                startButton.Text = "Стоп";
                 gameLogic.StartGame();
             }
             else if (gameLogic.gameState == GameState.PLAY)
             {
 
-                startButton.Text = "Возобновить";
-                gameLogic.PauseGame();
+                startButton.Text = "Старт";
+                gameLogic.StopGame();
             }
-            else if (gameLogic.gameState == GameState.PAUSE)
-            {
 
-                startButton.Text = "Пауза";
-                gameLogic.ResumeGame();
-            }
         }
 
         public override bool OnCreateOptionsMenu(IMenu menu)

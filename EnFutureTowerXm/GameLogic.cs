@@ -13,7 +13,7 @@ using Android.Widget;
 
 namespace EnFutureTowerXm
 {
-    public enum GameState { IDLE, PAUSE, PLAY }
+    public enum GameState { IDLE, PLAY }
     public class GameLogic
     {
         // MAin game parameters
@@ -26,6 +26,8 @@ namespace EnFutureTowerXm
 
         // Current Force. It will be diifferens between attacker and defencer count;
         public int currentForce;
+        public int currentAttackersCount;
+        public int currentDefendersCount;
         private Team team;
 
         private Timer timer;
@@ -40,7 +42,7 @@ namespace EnFutureTowerXm
         // Current Owner
         public void SetTeam(Team value)
         {
-            if (gameState != GameState.IDLE)
+            if (gameState == GameState.IDLE)
                 team = value;
         }
 
@@ -64,7 +66,7 @@ namespace EnFutureTowerXm
 
         public List<IActor >actors ;
 
-        private ActorFinder finder;
+        public ActorFinder finder;
 
         public GameLogic()
         {
@@ -81,6 +83,10 @@ namespace EnFutureTowerXm
 
             timer.Elapsed += Timer_Elapsed;
             timer.Start();
+
+            currentAttackersCount = 0;
+            currentDefendersCount = 0;
+            team = new Team(Team.TeamColor.RED);
 
         }
 
@@ -100,12 +106,7 @@ namespace EnFutureTowerXm
             GameStateChanged(this, new GameStateChangedEventArgs("Игра запущена", GameState.PLAY));
         }
 
-        public void PauseGame()
-        {
-            gameState = GameState.PAUSE;
 
-            GameStateChanged(this, new GameStateChangedEventArgs("Игра приостановлена", GameState.PAUSE));
-        }
 
         public void StopGame()
         {
@@ -126,7 +127,7 @@ namespace EnFutureTowerXm
         public void Tick()
         {
             finder.Update();
-            actors = finder.GetActors();
+            actors = new List<IActor>( finder.GetActors().Values) ;
             currentForce = GetCurrentForce(actors);
             if (currentForce == 0)
             {
@@ -142,35 +143,57 @@ namespace EnFutureTowerXm
                 // If heal is Enabled
                 else
                 {
+                    tower.Heal(-currentForce);
                 }
-
+                if (tower.isDead)
+                {
+                    StopGame();
+                }
             }
         }
 
         public int GetCurrentForce (List<IActor> actors)
         {
-            int _defendersCount = 0;
-            int _attackersCount = 0;
+            int currentDefendersCount = 0;
+            int currentAttackersCount = 0;
+            int artefactForce = 0;
 
             foreach (var a in actors)
             {
-                if (a is Player)
+                if (a is Player player)
                 {
-                    var player = (Player)a;
+                    Console.WriteLine("pLAYER FOUN OF {0} an out team is {1}", player.Team.Color.ToString(), " pizdec");
+                    Console.WriteLine("Our team is {0}", GetTeam().Color.ToString());
                     if (player.Team.Color == GetTeam().Color)
                     {
-                        _defendersCount++;
-                    } 
+
+                        currentDefendersCount++;
+                    }
                     else
                     {
-                        _attackersCount++;
+                        currentAttackersCount++;
+                    }
+                }
+                else if (a is Artefact artefact)
+                {
+                    switch (artefact.GetType())
+                    {
+                        case Artefact.ArtefactType.BOMB:
+                            if (artefact)
+
+
                     }
                 }
 
             }
 
-            int _currentForce = _attackersCount - _defendersCount;
-            GameTick(this, new GameTickEventArgs(_attackersCount, _defendersCount, _currentForce));
+            int _currentForce = currentAttackersCount - currentDefendersCount;
+
+
+
+             GameTick(this, new GameTickEventArgs(currentAttackersCount, currentDefendersCount, _currentForce));
+           //     GameTick(this, new GameTickEventArgs(3, 4, 5));
+
             /*
              * Aplly artefactes
              */

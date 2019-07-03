@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using System.Timers;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -15,23 +15,58 @@ namespace EnFutureTowerXm
         /// <summary>
         /// Use it for game logic. And create actor from table.
         /// </summary>
-    class ActorFinder
+    public class ActorFinder
     {
-        private List<IActor> _currentVisibleActors;
+        private Dictionary<string,IActor> _currentVisibleActors;
 
-        private DeviceDatabase devDatabase;
-
-        private BLEScanner bLEScanner;
+        //private DeviceDatabase devDatabase;
+        private LocalDeviceDatabase devDatabase;
+        public BLEScanner bLEScanner;
 
         private ActorFactory ActorFactory;
+
+        private List<BLEDeviceView> _currentDevList;
+
+        private Timer timer;
 
 
         public ActorFinder()
         {
             bLEScanner = new BLEScanner();
-            devDatabase = new DeviceDatabase();
+            devDatabase = new LocalDeviceDatabase();
             ActorFactory = new ActorFactory();
+            _currentVisibleActors = new Dictionary<string, IActor>();
+            bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
+
+            timer = new Timer
+            {
+                Interval = 1000
+            };
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
             
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            foreach (var actor in _currentVisibleActors)
+            {
+                actor.Value.TickTimeout();
+                if (actor.Value.GetTimeout() == -15)
+                {
+                    _currentVisibleActors.Remove(actor.Key);
+                }
+            }
+        }
+
+        private void Adapter_DeviceDiscovered(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
+        {
+            string id = e.Device.Id.ToString();
+            var row = devDatabase.GetDeviceById(id);
+            if (row != null)
+            {
+                _currentVisibleActors.TryAdd(row.ID, ActorFactory.NewActor(row));
+            }
         }
 
         // after it will be need change to events
@@ -46,7 +81,7 @@ namespace EnFutureTowerXm
             bLEScanner.StopScan();
         }
 
-        public List<IActor> GetActors()
+        public Dictionary<string, IActor> GetActors()
         {
             return _currentVisibleActors;
         }
@@ -54,15 +89,13 @@ namespace EnFutureTowerXm
         public void Update ()
         {
             var dev_list = bLEScanner.GetDeviceList();
-            _currentVisibleActors.Clear();
+//            _currentVisibleActors.Clear();
 
             foreach (var dev in dev_list)
             {
                 var row =  devDatabase.GetDeviceById(dev.id.ToString());
-                if (row != null)
-                {
-                    _currentVisibleActors.Add(ActorFactory.NewActor(row));
-                }
+                Console.WriteLine("Find {0}", dev.id.ToString());
+
             }
         } 
  

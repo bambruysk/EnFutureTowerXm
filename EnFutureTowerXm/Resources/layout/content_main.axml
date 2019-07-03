@@ -16,14 +16,18 @@
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:id="@+id/linearLayout1">
-		<Chronometer
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:id="@+id/chronometer1"
-			android:countDown= "true"
-			android:textAlignment="center"
-			android:textAllCaps="false"
-			android:textSize="80sp" />
+
+			<Chronometer
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:id="@+id/chronometer1"
+				android:countDown= "true"
+				android:textAlignment="center"
+				android:textAllCaps="false"
+				android:textSize="80sp" />
+
+
+
 		<TextView
 			android:text="100"
 			android:textAppearance="?android:attr/textAppearanceLarge"

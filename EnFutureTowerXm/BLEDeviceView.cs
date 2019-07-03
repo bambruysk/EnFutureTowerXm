@@ -43,5 +43,15 @@ namespace EnFutureTowerXm
         {
             Countdown = 5;
         }
+
+        public string GetShortId( Guid guid)
+        {
+            string id_short_str = guid.ToString();
+            if (id_short_str.Length > 12)
+            {
+                id_short_str = id_short_str.Substring(id_short_str.Length - 12);
+            }
+            return id_short_str;
+        }
     }
 }

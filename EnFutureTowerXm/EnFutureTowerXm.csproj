@@ -73,6 +73,7 @@
     <Compile Include="GameLogic.cs" />
     <Compile Include="GameStateChangedEventArgs.cs" />
     <Compile Include="GameTickEventArgs.cs" />
+    <Compile Include="LocalDeviceDatabase.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
