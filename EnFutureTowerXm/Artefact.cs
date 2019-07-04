@@ -25,12 +25,14 @@ namespace EnFutureTowerXm
         public int timeout = 5;
         public bool disabled;
         public int currentCoolDown;
+        public string Id;
 
-        public Artefact (ArtefactType type, int powerValue, int cooldown )
+        public Artefact (string id, ArtefactType type, int powerValue, int cooldown )
         {
             Type = type;
             this.cooldown = cooldown;
             this.powerValue = powerValue;
+            Id = id;
 
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
@@ -17,6 +18,7 @@ namespace EnFutureTowerXm
         Button stopButton;
         Chronometer chronometer;
         TextView textViewGameStatus;
+        TextView textViewGameEffects;
         TextView textViewHealth;
         ChronometerControl chronometerControl;
         RadioGroup radioGroup;
@@ -36,21 +38,18 @@ namespace EnFutureTowerXm
             ImageView imageViewTower = FindViewById<ImageView>(Resource.Id.imageViewTower);
             towerView = new TowerView(imageViewTower);
 
-            gameLogic = new GameLogic();
-            gameLogic.tower.HPChanged += towerView.OnHPChanged;
-            gameLogic.GameStateChanged += (s, e) => { textViewGameStatus.Text = e.statusText; };
+            gameLogic = null;
 
             chronometer = FindViewById<Chronometer>(Resource.Id.chronometer1);
             chronometerControl = new ChronometerControl(chronometer, 10 * 60 * 1000);
 
-            gameLogic.GameStateChanged += chronometerControl.GameStateChangedHandler;
-            gameLogic.GameTick += GameLogic_GameTick;
 
             textViewGameStatus = FindViewById<TextView>(Resource.Id.textViewGameStatus);
+            textViewGameEffects = FindViewById<TextView>(Resource.Id.textViewGameEffects);
+            
 
             textViewHealth = FindViewById<TextView>(Resource.Id.textViewSimpleHealth);
-            textViewHealth.Text = gameLogic.Max_HP.ToString();
-            gameLogic.tower.HPChanged += (s, e) => { textViewHealth.Text = e.HP.ToString(); };
+            textViewHealth.Text = "Стоп";
 
 
             startButton = FindViewById<Button>(Resource.Id.buttonStartPause);
@@ -66,7 +65,7 @@ namespace EnFutureTowerXm
             textViewDefendersCount = FindViewById<TextView>(Resource.Id.textViewDefenceCount);
             TextViewForce = FindViewById<TextView>(Resource.Id.textViewForce);
 
-            gameLogic.finder.bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
+
 
 
         }
@@ -79,11 +78,33 @@ namespace EnFutureTowerXm
 
         private void GameLogic_GameTick(object sender, GameTickEventArgs e)
         {
-            textViewAttackersCount.Text = e.attackersCount.ToString();
-            textViewDefendersCount.Text = e.defendersCount.ToString();
-            TextViewForce.Text = e.currentForce.ToString();
+            textViewAttackersCount.Text = e.AttackersCount.ToString();
+            textViewDefendersCount.Text = e.DefendersCount.ToString();
+            TextViewForce.Text = (-e.CurrentForce).ToString();
             textViewHealth.Text = gameLogic.tower.HP.ToString();
+            textViewGameEffects.Text = "Эффекты:" + e.CurrentEffects();
+
+            if (e.Bomb != 0)
+            {
+                Toast toast = Toast.MakeText(this, "Бомба взорвана!!!", ToastLength.Long);
+                toast.SetGravity(GravityFlags.Center, 0, 0);
+                toast.Show();
+            }
+
+            if (e.Heal != 0)
+            {
+                Toast toast = Toast.MakeText(this, "Лечениt!", ToastLength.Long);
+                toast.SetGravity(GravityFlags.Center, 0, 0);
+                toast.Show();
+            }
+
         }
+
+       /// <summary>
+       /// ///////////////
+       /// </summary>
+       /// <param name="sender"></param>
+       /// <param name="e"></param>
 
         /*
                 private void Chronometer_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
@@ -98,31 +119,42 @@ namespace EnFutureTowerXm
         private void StartButton_Click(object sender, EventArgs e)
         {
            
-            if(gameLogic.gameState == GameState.IDLE)
+            if(gameLogic == null)
             {
 
                 switch (radioGroup.CheckedRadioButtonId)
                 {
                     case Resource.Id.radioButtonRed:
-                        gameLogic.SetTeam(new Team(Team.TeamColor.RED));
+                        CreateGameLogic(new Team(Team.TeamColor.RED));
                         break;
                     case Resource.Id.radioButtonGreen:
-                        gameLogic.SetTeam(new Team(Team.TeamColor.BLUE));
+                        CreateGameLogic(new Team(Team.TeamColor.BLUE));
                         break;
                     default:
-                        gameLogic.SetTeam(new Team(Team.TeamColor.RED));
+                        CreateGameLogic(new Team(Team.TeamColor.RED));
                         break;
                 }
                 startButton.Text = "Стоп";
                 gameLogic.StartGame();
             }
-            else if (gameLogic.gameState == GameState.PLAY)
+            else 
             {
-
+                gameLogic = null;
                 startButton.Text = "Старт";
-                gameLogic.StopGame();
+                //gameLogic.StopGame();
             }
 
+        }
+
+        public void CreateGameLogic(Team team)
+        {
+            gameLogic = new GameLogic(team);
+            gameLogic.GameStateChanged += (s, e) => { textViewGameStatus.Text = e.statusText; };
+            gameLogic.tower.HPChanged += towerView.OnHPChanged;
+            gameLogic.GameTick += GameLogic_GameTick;
+            gameLogic.GameStateChanged += chronometerControl.GameStateChangedHandler;
+            gameLogic.tower.HPChanged += (s, e) => { textViewHealth.Text = e.HP.ToString(); };
+            gameLogic.finder.bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
         }
 
         public override bool OnCreateOptionsMenu(IMenu menu)

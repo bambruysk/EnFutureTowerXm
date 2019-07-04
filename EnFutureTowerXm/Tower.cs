@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using System.Timers;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -19,6 +19,12 @@ namespace EnFutureTowerXm
 
         public bool isDead;
 
+        public bool immuneStatus;
+
+        private Timer countDownTimer;
+
+        public int FreezeElapsedTime;
+
         public delegate void TowerHPChangeHandler(object sender, TowerHPChangeEventArgs e);
 
         public event TowerHPChangeHandler HPChanged;
@@ -32,24 +38,46 @@ namespace EnFutureTowerXm
 
         public void ApplyDamage(int damage)
         {
-
-            HP -= damage;
-            if (HP < 0)
+            if (!immuneStatus)
             {
-                isDead = true;
+                HP -= damage;
+                if (HP < 0)
+                {
+                    isDead = true;
+                }
+                HPChanged?.Invoke(this, new TowerHPChangeEventArgs(HP));
             }
-            HPChanged?.Invoke(this, new TowerHPChangeEventArgs(HP));
         }
 
         public void Heal(int heal)
         {
-            HP += heal;
-            if (HP > Max_HP)
+            if (!immuneStatus)
             {
-                HP = Max_HP;
-            }
+                HP += heal;
+                if (HP > Max_HP)
+                {
+                    HP = Max_HP;
+                }
 
-            HPChanged?.Invoke(this, new TowerHPChangeEventArgs(HP));
+                HPChanged?.Invoke(this, new TowerHPChangeEventArgs(HP));
+            }
+        }
+
+        public void Freeze (int freezeTime)
+        {
+            FreezeElapsedTime = freezeTime;
+            immuneStatus = true;
+            countDownTimer = new Timer(1000);
+            countDownTimer.AutoReset = false;
+            countDownTimer.Elapsed += (s, e) => {
+                freezeTime--;
+                if (freezeTime == 0)
+                {
+                    countDownTimer.Stop();
+                    immuneStatus = false;
+                }
+            };
+            countDownTimer.Start();
         }
     }
 }

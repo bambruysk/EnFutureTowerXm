@@ -37,23 +37,23 @@ namespace EnFutureTowerXm
                 var cooldown = row.Cooldown;
                 if (row.ArtefactType == "HEAL ONETIME")
                 {
-                    return new Artefact(Artefact.ArtefactType.HEAL_ONETEME, value, cooldown);
+                    return new Artefact(row.ID,Artefact.ArtefactType.HEAL_ONETEME, value, cooldown);
                 }
                 if (row.ArtefactType == "BOMB")
                 {
-                    return new Artefact(Artefact.ArtefactType.BOMB, value, cooldown);
+                    return new Artefact(row.ID, Artefact.ArtefactType.BOMB, value, cooldown);
                 }
                 if (row.ArtefactType == "HEAL PERMANENT")
                 {
-                    return new Artefact(Artefact.ArtefactType.HEAL_PERMANENT, value, cooldown);
+                    return new Artefact(row.ID, Artefact.ArtefactType.HEAL_PERMANENT, value, cooldown);
                 }
                 if (row.ArtefactType == "POISON")
                 {
-                    return new Artefact(Artefact.ArtefactType.POISON, value, cooldown);
+                    return new Artefact(row.ID, Artefact.ArtefactType.POISON, value, cooldown);
                 }
                 if (row.ArtefactType == "IMMUNE")
                 {
-                    return new Artefact(Artefact.ArtefactType.IMMUNE, value, cooldown);
+                    return new Artefact(row.ID, Artefact.ArtefactType.IMMUNE, value, cooldown);
                 }
 
             }

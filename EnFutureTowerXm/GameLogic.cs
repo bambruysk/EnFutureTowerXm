@@ -1,15 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Timers;
-
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 
 namespace EnFutureTowerXm
 {
@@ -30,8 +21,11 @@ namespace EnFutureTowerXm
         public int currentDefendersCount;
         private Team team;
 
+        public int currentHeal;
+        public int currentPoison;
+
         private Timer timer;
-        public const int gameTickPeriod = 1000; // in ms
+        public const int gameTickPeriod = 1500; // in ms
 
         // Current Owner
         public Team GetTeam()
@@ -43,7 +37,9 @@ namespace EnFutureTowerXm
         public void SetTeam(Team value)
         {
             if (gameState == GameState.IDLE)
+            {
                 team = value;
+            }
         }
 
         // Game State. 
@@ -58,17 +54,19 @@ namespace EnFutureTowerXm
 
         public event GameTickHandler GameTick;
 
-        public long gameTimePeriod; 
+        public long gameTimePeriod;
 
         public long currentGameTime;
 
         private List<IActor> disabled;
 
-        public List<IActor >actors ;
+        public List<IActor> actors;
+
+        private List<string> used_artifacts;
 
         public ActorFinder finder;
 
-        public GameLogic()
+        public GameLogic(Team myteam)
         {
             Max_HP = 100;
             HP = Max_HP;
@@ -86,7 +84,11 @@ namespace EnFutureTowerXm
 
             currentAttackersCount = 0;
             currentDefendersCount = 0;
-            team = new Team(Team.TeamColor.RED);
+            team = myteam;
+
+            used_artifacts = new List<string>();
+
+            //Tick();
 
         }
 
@@ -127,7 +129,7 @@ namespace EnFutureTowerXm
         public void Tick()
         {
             finder.Update();
-            actors = new List<IActor>( finder.GetActors().Values) ;
+            actors = new List<IActor>(finder.GetActors().Values);
             currentForce = GetCurrentForce(actors);
             if (currentForce == 0)
             {
@@ -152,12 +154,15 @@ namespace EnFutureTowerXm
             }
         }
 
-        public int GetCurrentForce (List<IActor> actors)
+        public int GetCurrentForce(List<IActor> actors)
         {
             int currentDefendersCount = 0;
             int currentAttackersCount = 0;
             int artefactForce = 0;
-
+            currentHeal = 0;
+            currentPoison = 0;
+            int bombDamageValue = 0;
+            int HealOneTime = 0;
             foreach (var a in actors)
             {
                 if (a is Player player)
@@ -176,29 +181,64 @@ namespace EnFutureTowerXm
                 }
                 else if (a is Artefact artefact)
                 {
-                    switch (artefact.GetType())
+                    switch (artefact.Type)
                     {
                         case Artefact.ArtefactType.BOMB:
-                            if (artefact)
 
+                            if (!used_artifacts.Contains(artefact.Id))
+                            {
+                                artefactForce += artefact.powerValue;
+                                bombDamageValue += artefact.powerValue;
+                                used_artifacts.Add(artefact.Id);
+                            }
+                            break;
+                        case Artefact.ArtefactType.HEAL_ONETEME:
+
+                            if (!used_artifacts.Contains(artefact.Id))
+                            {
+                                artefactForce -= artefact.powerValue;
+                                HealOneTime += artefact.powerValue;
+                                used_artifacts.Add(artefact.Id);
+                            }
+                            break;
+                        case Artefact.ArtefactType.HEAL_PERMANENT:
+                            artefactForce -= artefact.powerValue;
+                            currentHeal += artefact.powerValue;
+                            break;
+                        case Artefact.ArtefactType.POISON:
+                            artefactForce += artefact.powerValue;
+                            currentPoison += artefact.powerValue;
+                            break;
+                        case Artefact.ArtefactType.IMMUNE:
+                            return 0;
 
                     }
                 }
 
             }
 
-            int _currentForce = currentAttackersCount - currentDefendersCount;
+            int _currentForce = currentAttackersCount - currentDefendersCount + artefactForce;
 
 
 
-             GameTick(this, new GameTickEventArgs(currentAttackersCount, currentDefendersCount, _currentForce));
-           //     GameTick(this, new GameTickEventArgs(3, 4, 5));
+            GameTick(this, new GameTickEventArgs(
+                currentAttackersCount,
+                currentDefendersCount,
+                _currentForce,
+                currentPoison,
+                HealOneTime,
+                currentHeal,
+                bombDamageValue
+                )
+                );
+
+            //     GameTick(this, new GameTickEventArgs(3, 4, 5));
 
             /*
              * Aplly artefactes
              */
             return _currentForce;
-        } 
+        }
 
 
 

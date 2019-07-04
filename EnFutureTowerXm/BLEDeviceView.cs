@@ -29,7 +29,7 @@ namespace EnFutureTowerXm
         public BLEDeviceView(IDevice device)
         {
             id = device.Id;
-            Countdown = 5;
+            Countdown = 10;
             RSSI = device.Rssi;
 
         }
@@ -41,7 +41,7 @@ namespace EnFutureTowerXm
 
         public void UpdateCountdown()
         {
-            Countdown = 5;
+            Countdown = 10;
         }
 
         public string GetShortId( Guid guid)

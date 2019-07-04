@@ -44,27 +44,30 @@ namespace EnFutureTowerXm
             deviceList = new List<BLEDeviceView>();
 
             MinRssi = -100;
+            adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
 
-            adapter.DeviceDiscovered += (s, a) =>
+
+        }
+
+        private void Adapter_DeviceDiscovered(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
+        {
+            Console.WriteLine("DeviceFound");
+
+            if (e.Device.Rssi >= MinRssi)
             {
-                Console.WriteLine("DeviceFound");
-
-                if (a.Device.Rssi >= MinRssi)
+                if (deviceList.Exists(d => d.id == e.Device.Id))
                 {
-                    if (deviceList.Exists(d => d.id == a.Device.Id))
-                    {
 
-                        var dev = deviceList.Find(d => d.id == a.Device.Id);
-                        dev.UpdateCountdown();
-                        dev.RSSI = a.Device.Rssi;
+                    var dev = deviceList.Find(d => d.id == e.Device.Id);
+                    dev.UpdateCountdown();
+                    dev.RSSI = e.Device.Rssi;
 
-                    }
-                    else
-                    {
-                        deviceList.Add(new BLEDeviceView(a.Device));
-                    }
                 }
-            };
+                else
+                {
+                    deviceList.Add(new BLEDeviceView(e.Device));
+                }
+            }
         }
 
         public void StartScan()
@@ -82,7 +85,7 @@ namespace EnFutureTowerXm
             {
                 await adapter.StartScanningForDevicesAsync();
             }
-            // ProcessDevices();
+            ProcessDevices();
         }
 
         public void ResumeScan()

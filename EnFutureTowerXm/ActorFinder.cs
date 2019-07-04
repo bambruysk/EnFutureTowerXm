@@ -52,7 +52,7 @@ namespace EnFutureTowerXm
             foreach (var actor in _currentVisibleActors)
             {
                 actor.Value.TickTimeout();
-                if (actor.Value.GetTimeout() == -15)
+                if (actor.Value.GetTimeout() == -10)
                 {
                     _currentVisibleActors.Remove(actor.Key);
                 }
@@ -83,7 +83,18 @@ namespace EnFutureTowerXm
 
         public Dictionary<string, IActor> GetActors()
         {
-            return _currentVisibleActors;
+            var result = new Dictionary<string, IActor>();
+            var devlist = bLEScanner.GetDeviceList();
+            foreach (var dev in devlist)
+            {
+                string id = dev.id.ToString();
+                var row = devDatabase.GetDeviceById(id);
+                if (row != null)
+                {
+                    result.TryAdd(row.ID, ActorFactory.NewActor(row));
+                }
+            }
+            return result;
         }
 
         public void Update ()
