@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
@@ -14,17 +16,25 @@ namespace EnFutureTowerXm
     {
         GameLogic gameLogic;
         Button startButton;
-        Button stopButton;
+
         Chronometer chronometer;
         TextView textViewGameStatus;
+
         TextView textViewHealth;
         ChronometerControl chronometerControl;
-        RadioGroup radioGroup;
-
+        
         TextView textViewAttackersCount;
         TextView textViewDefendersCount;
         TextView TextViewForce;
-        TowerView towerView;
+
+        ArtefactListView artefactListView;
+        RadioGroup radioGroup;
+
+        TextView textViewGameHistory;
+
+        ProgressBar progressBar;
+
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -33,42 +43,62 @@ namespace EnFutureTowerXm
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
 
-            ImageView imageViewTower = FindViewById<ImageView>(Resource.Id.imageViewTower);
-            towerView = new TowerView(imageViewTower);
-
-            gameLogic = new GameLogic();
-            gameLogic.tower.HPChanged += towerView.OnHPChanged;
-            gameLogic.GameStateChanged += (s, e) => { textViewGameStatus.Text = e.statusText; };
+            gameLogic = null;
 
             chronometer = FindViewById<Chronometer>(Resource.Id.chronometer1);
-            chronometerControl = new ChronometerControl(chronometer, 10 * 60 * 1000);
-
-            gameLogic.GameStateChanged += chronometerControl.GameStateChangedHandler;
-            gameLogic.GameTick += GameLogic_GameTick;
-
-            textViewGameStatus = FindViewById<TextView>(Resource.Id.textViewGameStatus);
 
             textViewHealth = FindViewById<TextView>(Resource.Id.textViewSimpleHealth);
-            textViewHealth.Text = gameLogic.Max_HP.ToString();
-            gameLogic.tower.HPChanged += (s, e) => { textViewHealth.Text = e.HP.ToString(); };
-
+            textViewHealth.Text = "Стоп";
 
             startButton = FindViewById<Button>(Resource.Id.buttonStartPause);
-            stopButton = FindViewById<Button>(Resource.Id.buttonStop);
 
             startButton.Click += StartButton_Click;
             startButton.Text = "Старт";
-
-            radioGroup = FindViewById<RadioGroup>(Resource.Id.radioGroup1);
-
 
             textViewAttackersCount = FindViewById<TextView>(Resource.Id.textViewAttackCount);
             textViewDefendersCount = FindViewById<TextView>(Resource.Id.textViewDefenceCount);
             TextViewForce = FindViewById<TextView>(Resource.Id.textViewForce);
 
-            gameLogic.finder.bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
+            artefactListView = new ArtefactListView(this);
+            artefactListView.UpdateView();
 
+            progressBar = FindViewById<ProgressBar>(Resource.Id.progressBar);
+            progressBar.Indeterminate = false;
+            progressBar.Max = 50;
+            progressBar.Progress = 25;
+            textViewGameStatus = FindViewById<TextView>(Resource.Id.textViewGameStatus);
 
+        }
+
+        private void GameLogic_GameStateChanged(object sender, GameStateChangedEventArgs e)
+        {
+            chronometerControl = new ChronometerControl(chronometer, gameLogic.timings[e.state], true);
+
+            var listGameStatusText = new Dictionary<GameState, string> {
+                { GameState.IDLE, "Остановлена" },
+                { GameState.PLAY_1, "Первый раунд"},
+                { GameState.PLAY_2, "Второй раунд" },
+                { GameState.PLAY_3, "Третий раунд" },
+                { GameState.WAITING_1, "Ждем первый раунд" },
+                { GameState.WAITING_2, "Ждем второй раунд" },
+                { GameState.WAITING_3, "Ждем третий раунд" },
+                { GameState.FINAL, "Окончание" }
+            };
+
+            textViewGameStatus.Text = listGameStatusText[e.state];
+            switch (e.state)
+            {
+                case GameState.WAITING_1:
+                    artefactListView.UpdateView();
+                    break;
+                case GameState.WAITING_2:
+                    artefactListView.Next1();
+                    break;
+
+                case GameState.WAITING_3:
+                    artefactListView.Next2();
+                    break;
+            }
         }
 
         private void Adapter_DeviceDiscovered(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
@@ -79,11 +109,28 @@ namespace EnFutureTowerXm
 
         private void GameLogic_GameTick(object sender, GameTickEventArgs e)
         {
-            textViewAttackersCount.Text = e.attackersCount.ToString();
-            textViewDefendersCount.Text = e.defendersCount.ToString();
-            TextViewForce.Text = e.currentForce.ToString();
-            textViewHealth.Text = gameLogic.tower.HP.ToString();
+
+            textViewAttackersCount.Text = e.AttackersCount.ToString();
+            textViewDefendersCount.Text = e.DefendersCount.ToString();
+            TextViewForce.Text = (-e.CurrentForce).ToString();
+            textViewHealth.Text = e.Station.HP.ToString();
+            progressBar.Max = e.Station.Max_HP;
+            progressBar.Progress = (int)(Math.Abs(e.Station.HP));
+            if (e.Station.HP > 0)
+            {
+                progressBar.ProgressDrawable.SetColorFilter(Android.Graphics.Color.Red, Android.Graphics.PorterDuff.Mode.SrcIn);
+            } else
+            {
+                progressBar.ProgressDrawable.SetColorFilter(Android.Graphics.Color.Blue, Android.Graphics.PorterDuff.Mode.SrcIn);
+
+            }
         }
+
+       /// <summary>
+       /// ///////////////
+       /// </summary>
+       /// <param name="sender"></param>
+       /// <param name="e"></param>
 
         /*
                 private void Chronometer_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
@@ -98,32 +145,29 @@ namespace EnFutureTowerXm
         private void StartButton_Click(object sender, EventArgs e)
         {
            
-            if(gameLogic.gameState == GameState.IDLE)
+            if(gameLogic == null)
             {
 
-                switch (radioGroup.CheckedRadioButtonId)
-                {
-                    case Resource.Id.radioButtonRed:
-                        gameLogic.SetTeam(new Team(Team.TeamColor.RED));
-                        break;
-                    case Resource.Id.radioButtonGreen:
-                        gameLogic.SetTeam(new Team(Team.TeamColor.BLUE));
-                        break;
-                    default:
-                        gameLogic.SetTeam(new Team(Team.TeamColor.RED));
-                        break;
-                }
+                gameLogic = new GameLogic();
                 startButton.Text = "Стоп";
-                gameLogic.StartGame();
+                gameLogic.finder.bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
+                gameLogic.GameStateChanged += GameLogic_GameStateChanged;
+                gameLogic.GameTick += GameLogic_GameTick;
+                textViewGameStatus.Text = "Игра начата";
             }
-            else if (gameLogic.gameState == GameState.PLAY)
+            else 
             {
-
+                
                 startButton.Text = "Старт";
-                gameLogic.StopGame();
+                gameLogic.GameStateChanged -= GameLogic_GameStateChanged;
+                gameLogic.GameTick -= GameLogic_GameTick;
+                gameLogic = null;
+
             }
 
         }
+
+
 
         public override bool OnCreateOptionsMenu(IMenu menu)
         {

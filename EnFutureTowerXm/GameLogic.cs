@@ -1,50 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Timers;
-
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 
 namespace EnFutureTowerXm
 {
-    public enum GameState { IDLE, PLAY }
+    public enum GameState {IDLE,   WAITING_1, PLAY_1, WAITING_2, PLAY_2, WAITING_3, PLAY_3, FINAL }
     public class GameLogic
     {
         // MAin game parameters
         public int Max_HP;
         public int HP;
-        // Tower
-        public Tower tower;
+
         // Interval for game tick in ms
         public int updateInterval;
 
         // Current Force. It will be diifferens between attacker and defencer count;
-        public int currentForce;
+        public double currentForce;
         public int currentAttackersCount;
         public int currentDefendersCount;
-        private Team team;
+
+
+        public int currentHeal;
+        public int currentPoison;
 
         private Timer timer;
         public const int gameTickPeriod = 1000; // in ms
 
-        // Current Owner
-        public Team GetTeam()
-        {
-            return team;
-        }
 
-        // Current Owner
-        public void SetTeam(Team value)
-        {
-            if (gameState == GameState.IDLE)
-                team = value;
-        }
+
 
         // Game State. 
 
@@ -58,76 +41,125 @@ namespace EnFutureTowerXm
 
         public event GameTickHandler GameTick;
 
-        public long gameTimePeriod; 
+        public long gameTimePeriod;
 
         public long currentGameTime;
 
-        private List<IActor> disabled;
 
-        public List<IActor >actors ;
+
+        public List<IActor> actors;
+
+
+        public Station station;
 
         public ActorFinder finder;
 
+        public Dictionary<GameState, int> timings;
+
+        private Timer secondTimer;
+
         public GameLogic()
         {
-            Max_HP = 100;
-            HP = Max_HP;
-            tower = new Tower(Max_HP);
 
-            gameTimePeriod = 10 * 60 * 1000;
+            station = new Station(); 
 
-            gameState = GameState.IDLE;
+   
+            gameState = GameState.WAITING_1;
             finder = new ActorFinder();
+            finder.FindStart();
 
-            timer = new Timer(gameTickPeriod);
-
-            timer.Elapsed += Timer_Elapsed;
-            timer.Start();
+            secondTimer = new Timer(1000);
+            secondTimer.Elapsed += SecondTimer_Elapsed;
+            secondTimer.Start();
 
             currentAttackersCount = 0;
             currentDefendersCount = 0;
-            team = new Team(Team.TeamColor.RED);
+
+            timings = new Dictionary<GameState, int>
+            {
+                { GameState.IDLE, 0 },
+                { GameState.PLAY_1, 60 },
+                { GameState.PLAY_2, 60 },
+                { GameState.PLAY_3, 60 },
+                { GameState.WAITING_1, 120 },
+                { GameState.WAITING_2, 120 },
+                { GameState.WAITING_3, 120 },
+                { GameState.FINAL, 300 }
+            };
+
+            ///GameStateChanged(this, new GameStateChangedEventArgs(gameState));
 
         }
 
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private void SecondTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (gameState == GameState.PLAY)
+            currentGameTime++;
+            if (currentGameTime >= timings[gameState])
             {
-                Tick();
+                NextState();
+            }
+            Tick();
+        }
+
+        private void NextState()
+        {
+            GameStateChanged(this, new GameStateChangedEventArgs(gameState));
+            currentGameTime = 0;
+            switch (gameState)
+            {
+                case GameState.WAITING_1:
+                    gameState = GameState.PLAY_1;
+                    station = new Station();
+                    break;
+                case GameState.PLAY_1:
+                    gameState = GameState.WAITING_2;
+                    station = null;
+                    break;
+                case GameState.WAITING_2:
+                    gameState = GameState.PLAY_2;
+                    station = new Station();
+                    break;
+                case GameState.PLAY_2:
+                    gameState = GameState.WAITING_3;
+                    station = null;
+                    break;
+                case GameState.WAITING_3:
+                    gameState = GameState.PLAY_3;
+                    station = new Station();
+                    break;
+                case GameState.PLAY_3:
+                    gameState = GameState.FINAL;
+                    station = null;
+                    break;
+                case GameState.FINAL:
+                    station = null;
+                    break;
+
             }
         }
 
-        public void StartGame()
+
+        public void Waiting()
         {
-            currentGameTime = 10 * 60 * 1000;
-            finder.FindStart();
-            gameState = GameState.PLAY;
-            GameStateChanged(this, new GameStateChangedEventArgs("Игра запущена", GameState.PLAY));
-        }
-
-
-
-        public void StopGame()
-        {
-            finder.FindStop();
-            gameState = GameState.IDLE;
-            GameStateChanged(this, new GameStateChangedEventArgs("Игра остановлена", GameState.IDLE));
 
         }
 
-        public void ResumeGame()
-        {
-            finder.FindStart();
-            gameState = GameState.PLAY;
-            GameStateChanged(this, new GameStateChangedEventArgs("Игра запущена", GameState.PLAY));
-        }
+        //public void StartGame()
+        //{
+        //    currentGameTime = 10 * 60 * 1000;
+        //    finder.FindStart();
+        //    gameState = GameState.WAITING_1;
+        //    GameStateChanged(this, new GameStateChangedEventArgs(gameState));
+        //}
+
+
+
 
         // Call every game cycle
         public void Tick()
         {
             finder.Update();
-            actors = new List<IActor>( finder.GetActors().Values) ;
+            actors = new List<IActor>(finder.GetActors().Values);
             currentForce = GetCurrentForce(actors);
             if (currentForce == 0)
             {
@@ -135,36 +167,26 @@ namespace EnFutureTowerXm
             }
             else
             {
-
-                if (currentForce > 0)
+                station.ApplyImpact(currentForce);
+                if (station.IsOwned())
                 {
-                    tower.ApplyDamage(currentForce);
-                }
-                // If heal is Enabled
-                else
-                {
-                    tower.Heal(-currentForce);
-                }
-                if (tower.isDead)
-                {
-                    StopGame();
+                    NextState();
                 }
             }
         }
 
-        public int GetCurrentForce (List<IActor> actors)
+        public double GetCurrentForce(List<IActor> actors)
         {
             int currentDefendersCount = 0;
             int currentAttackersCount = 0;
-            int artefactForce = 0;
-
+   
             foreach (var a in actors)
             {
                 if (a is Player player)
                 {
                     Console.WriteLine("pLAYER FOUN OF {0} an out team is {1}", player.Team.Color.ToString(), " pizdec");
-                    Console.WriteLine("Our team is {0}", GetTeam().Color.ToString());
-                    if (player.Team.Color == GetTeam().Color)
+                   // Console.WriteLine("Our team is {0}", GetTeam().Color.ToString());
+                    if (player.Team.Color == Team.TeamColor.RED)
                     {
 
                         currentDefendersCount++;
@@ -174,31 +196,25 @@ namespace EnFutureTowerXm
                         currentAttackersCount++;
                     }
                 }
-                else if (a is Artefact artefact)
-                {
-                    switch (artefact.GetType())
-                    {
-                        case Artefact.ArtefactType.BOMB:
-                            if (artefact)
-
-
-                    }
-                }
-
             }
 
-            int _currentForce = currentAttackersCount - currentDefendersCount;
+            double _currentForce = .2*(currentAttackersCount - currentDefendersCount);
 
+            GameTick(this, new GameTickEventArgs(
+                currentAttackersCount,
+                currentDefendersCount,
+                _currentForce, 
+                station
+                )
+           );
 
-
-             GameTick(this, new GameTickEventArgs(currentAttackersCount, currentDefendersCount, _currentForce));
-           //     GameTick(this, new GameTickEventArgs(3, 4, 5));
+            //     GameTick(this, new GameTickEventArgs(3, 4, 5));
 
             /*
              * Aplly artefactes
              */
             return _currentForce;
-        } 
+        }
 
 
 

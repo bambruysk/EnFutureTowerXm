@@ -19,13 +19,17 @@ namespace EnFutureTowerXm
 
         public long currentTime;
 
-        public ChronometerControl(Chronometer chronometer, long maxTime)
+        public ChronometerControl(Chronometer chronometer, long maxTime, bool start)
         {
             this.chronometer = chronometer;
             this.maxTime = maxTime;
             currentTime = maxTime;
             chronometer.CountDown = true;
             chronometer.ChronometerTick += Chronometer_ChronometerTick;
+            if (start)
+            {
+                Start();
+            }
         }
 
         public void Start()
@@ -54,23 +58,6 @@ namespace EnFutureTowerXm
         }
 
         
-        public void GameStateChangedHandler(object sender, GameStateChangedEventArgs e)
-        {
-            switch (e.state)
-            {
-                case GameState.IDLE:
-                    {
-                        Stop();
-                        break;
-                    }
-
-                case GameState.PLAY:
-                    {
-                        Start();
-                        
-                        break;
-                    }  
-            }
-        }
+ 
     }
 }

@@ -15,18 +15,22 @@ namespace EnFutureTowerXm
 
     public class GameTickEventArgs
     {
-        public GameTickEventArgs(int attackersCount, int defendersCount, int currentForce)
+        public GameTickEventArgs(int attackersCount, int defendersCount, double currentForce, Station station)
         {
-            this.attackersCount = attackersCount;
-            this.defendersCount = defendersCount;
-            this.currentForce = currentForce;
+            AttackersCount = attackersCount;
+            DefendersCount = defendersCount;
+            CurrentForce = currentForce;
+            Station = station;
+
         }
 
-        public int attackersCount { get; }
-        public int defendersCount { get; }
-        public int currentForce { get; }
+        public int AttackersCount { get; }
+        public int DefendersCount { get; }
+        public double CurrentForce { get; }
+        public Station Station { get; }
 
-        
+
+
 
     }
 }

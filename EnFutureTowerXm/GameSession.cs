@@ -12,15 +12,19 @@ using Android.Widget;
 
 namespace EnFutureTowerXm
 {
-    public class GameStateChangedEventArgs
+    public class GameSession
     {
-     
-        public GameState state { get; }
+        public ActorFinder finder;
 
-        public GameStateChangedEventArgs( GameState st)
+        public int Time;
+
+        public int MaxTime;
+
+        public GameSession(int max_time)
         {
-
-            state = st;
+            MaxTime = max_time;
+            Time = 0;
         }
+ 
     }
 }

@@ -65,12 +65,14 @@
     <Compile Include="ActorFactory.cs" />
     <Compile Include="ActorFinder.cs" />
     <Compile Include="Artefact.cs" />
+    <Compile Include="ArtefactListView.cs" />
     <Compile Include="BLEDeviceView.cs" />
     <Compile Include="BLEScanner.cs" />
     <Compile Include="ChronometerControl.cs" />
     <Compile Include="DeviceDatabase.cs" />
     <Compile Include="DeviceTableRow.cs" />
     <Compile Include="GameLogic.cs" />
+    <Compile Include="GameSession.cs" />
     <Compile Include="GameStateChangedEventArgs.cs" />
     <Compile Include="GameTickEventArgs.cs" />
     <Compile Include="LocalDeviceDatabase.cs" />
@@ -78,8 +80,8 @@
     <Compile Include="Player.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Station.cs" />
     <Compile Include="Team.cs" />
-    <Compile Include="Tower.cs" />
     <Compile Include="TowerHPChangeEventArgs.cs" />
     <Compile Include="TowerView.cs" />
   </ItemGroup>
