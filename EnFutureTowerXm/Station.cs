@@ -16,21 +16,21 @@ namespace EnFutureTowerXm
     {
         // if HP more than 0  it red player owner, Other blue
 
-        public double HP;
+        public decimal HP;
 
         public int redImpact;
         public int blueImpact;
 
         public Team Owner;
 
-        public int Max_HP = 50;
+        public decimal Max_HP = 50;
 
         public Station()
         {
             HP = 0;
         }
 
-        public void ApplyImpact(double value)
+        public void ApplyImpact(decimal value)
         {
             HP += value;
             if (HP > Max_HP)

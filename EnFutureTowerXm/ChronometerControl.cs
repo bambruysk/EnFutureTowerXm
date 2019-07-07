@@ -34,7 +34,7 @@ namespace EnFutureTowerXm
 
         public void Start()
         {
-            chronometer.Base = SystemClock.ElapsedRealtime() + currentTime;
+            chronometer.Base = SystemClock.ElapsedRealtime() + currentTime*1000;
             chronometer.Start();
         }
 

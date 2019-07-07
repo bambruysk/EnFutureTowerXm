@@ -74,18 +74,7 @@ namespace EnFutureTowerXm
         {
             chronometerControl = new ChronometerControl(chronometer, gameLogic.timings[e.state], true);
 
-            var listGameStatusText = new Dictionary<GameState, string> {
-                { GameState.IDLE, "Остановлена" },
-                { GameState.PLAY_1, "Первый раунд"},
-                { GameState.PLAY_2, "Второй раунд" },
-                { GameState.PLAY_3, "Третий раунд" },
-                { GameState.WAITING_1, "Ждем первый раунд" },
-                { GameState.WAITING_2, "Ждем второй раунд" },
-                { GameState.WAITING_3, "Ждем третий раунд" },
-                { GameState.FINAL, "Окончание" }
-            };
 
-            textViewGameStatus.Text = listGameStatusText[e.state];
             switch (e.state)
             {
                 case GameState.WAITING_1:
@@ -113,15 +102,31 @@ namespace EnFutureTowerXm
             textViewAttackersCount.Text = e.AttackersCount.ToString();
             textViewDefendersCount.Text = e.DefendersCount.ToString();
             TextViewForce.Text = (-e.CurrentForce).ToString();
-            textViewHealth.Text = e.Station.HP.ToString();
-            progressBar.Max = e.Station.Max_HP;
-            progressBar.Progress = (int)(Math.Abs(e.Station.HP));
+            textViewHealth.Text = (e.Station == null) ? "0": e.Station.HP.ToString();
+            progressBar.Max = (e.Station == null) ? 50 : (int)(e.Station.Max_HP);
+            progressBar.Progress = (e.Station == null) ? 0 : (int)(Math.Abs(e.Station.HP));
+
+            var listGameStatusText = new Dictionary<GameState, string> {
+                { GameState.IDLE, "Остановлена" },
+                { GameState.PLAY_1, "Первый раунд"},
+                { GameState.PLAY_2, "Второй раунд" },
+                { GameState.PLAY_3, "Третий раунд" },
+                { GameState.WAITING_1, "Ждем первый раунд" },
+                { GameState.WAITING_2, "Ждем второй раунд" },
+                { GameState.WAITING_3, "Ждем третий раунд" },
+                { GameState.FINAL, "Окончание" }
+            };
+
+            textViewGameStatus.Text = listGameStatusText[gameLogic.gameState] + " " + gameLogic.gameState.ToString();
+
+            //textViewGameStatus.Text = gameLogic.gameState.ToString();
+
             if (e.Station.HP > 0)
             {
-                progressBar.ProgressDrawable.SetColorFilter(Android.Graphics.Color.Red, Android.Graphics.PorterDuff.Mode.SrcIn);
+                progressBar.ProgressDrawable.SetColorFilter(Android.Graphics.Color.Blue, Android.Graphics.PorterDuff.Mode.SrcIn);
             } else
             {
-                progressBar.ProgressDrawable.SetColorFilter(Android.Graphics.Color.Blue, Android.Graphics.PorterDuff.Mode.SrcIn);
+                progressBar.ProgressDrawable.SetColorFilter(Android.Graphics.Color.Red, Android.Graphics.PorterDuff.Mode.SrcIn);
 
             }
         }
@@ -147,8 +152,9 @@ namespace EnFutureTowerXm
            
             if(gameLogic == null)
             {
-
+                
                 gameLogic = new GameLogic();
+                chronometerControl = new ChronometerControl(chronometer, gameLogic.timings[gameLogic.defaultState], true);
                 startButton.Text = "Стоп";
                 gameLogic.finder.bLEScanner.adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
                 gameLogic.GameStateChanged += GameLogic_GameStateChanged;

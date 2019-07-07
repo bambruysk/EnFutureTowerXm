@@ -4,7 +4,7 @@ using System.Timers;
 
 namespace EnFutureTowerXm
 {
-    public enum GameState {IDLE,   WAITING_1, PLAY_1, WAITING_2, PLAY_2, WAITING_3, PLAY_3, FINAL }
+    public enum GameState { IDLE, WAITING_1, PLAY_1, WAITING_2, PLAY_2, WAITING_3, PLAY_3, FINAL }
     public class GameLogic
     {
         // MAin game parameters
@@ -15,7 +15,7 @@ namespace EnFutureTowerXm
         public int updateInterval;
 
         // Current Force. It will be diifferens between attacker and defencer count;
-        public double currentForce;
+        public decimal currentForce;
         public int currentAttackersCount;
         public int currentDefendersCount;
 
@@ -29,9 +29,16 @@ namespace EnFutureTowerXm
 
 
 
+
+
+
+
         // Game State. 
 
         public GameState gameState;
+
+        public GameState defaultState = GameState.WAITING_1;
+
 
         public delegate void GameStateChangeHandler(object sender, GameStateChangedEventArgs e);
 
@@ -61,9 +68,9 @@ namespace EnFutureTowerXm
         public GameLogic()
         {
 
-            station = new Station(); 
+            //           station = new Station(); 
 
-   
+
             gameState = GameState.WAITING_1;
             finder = new ActorFinder();
             finder.FindStart();
@@ -158,6 +165,17 @@ namespace EnFutureTowerXm
         // Call every game cycle
         public void Tick()
         {
+            if (station == null)
+            {
+                GameTick(this, new GameTickEventArgs(
+                    0,
+                    0,
+                    0,
+                    null
+                    )
+                );
+                return;
+            }
             finder.Update();
             actors = new List<IActor>(finder.GetActors().Values);
             currentForce = GetCurrentForce(actors);
@@ -175,17 +193,17 @@ namespace EnFutureTowerXm
             }
         }
 
-        public double GetCurrentForce(List<IActor> actors)
+        public decimal GetCurrentForce(List<IActor> actors)
         {
             int currentDefendersCount = 0;
             int currentAttackersCount = 0;
-   
+
             foreach (var a in actors)
             {
                 if (a is Player player)
                 {
                     Console.WriteLine("pLAYER FOUN OF {0} an out team is {1}", player.Team.Color.ToString(), " pizdec");
-                   // Console.WriteLine("Our team is {0}", GetTeam().Color.ToString());
+                    // Console.WriteLine("Our team is {0}", GetTeam().Color.ToString());
                     if (player.Team.Color == Team.TeamColor.RED)
                     {
 
@@ -198,12 +216,12 @@ namespace EnFutureTowerXm
                 }
             }
 
-            double _currentForce = .2*(currentAttackersCount - currentDefendersCount);
+            decimal _currentForce = .2m * (currentAttackersCount - currentDefendersCount);
 
             GameTick(this, new GameTickEventArgs(
                 currentAttackersCount,
                 currentDefendersCount,
-                _currentForce, 
+                _currentForce,
                 station
                 )
            );
