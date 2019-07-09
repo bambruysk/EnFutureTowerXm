@@ -44,7 +44,7 @@ namespace EnFutureTowerXm
 
 
 
-        private void Show()
+        public void Show()
         {
             switch (radioGroup.CheckedRadioButtonId)
             {

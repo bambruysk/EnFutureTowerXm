@@ -75,7 +75,7 @@
 			android:minWidth="25px"
 			android:minHeight="25px"
 			android:layout_width="match_parent"
-			android:layout_height="300sp"
+			android:layout_height="280sp"
 			android:id="@+id/linearLayoutArtefact">
 			<TextView
 				android:text="Артефакт" 
@@ -133,7 +133,7 @@
 			<RadioButton
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:text="FАтака 2"
+				android:text="Атака 2"
 				android:id="@+id/radioButtonAttack2" />
 			<RadioButton
 				android:layout_width="wrap_content"

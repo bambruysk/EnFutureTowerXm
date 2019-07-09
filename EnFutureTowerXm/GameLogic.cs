@@ -28,7 +28,7 @@ namespace EnFutureTowerXm
 
 
 
-
+        
 
 
 
@@ -56,14 +56,13 @@ namespace EnFutureTowerXm
 
         public List<IActor> actors;
 
-
-        public Station station;
-
-        public ActorFinder finder;
-
         public Dictionary<GameState, int> timings;
 
         private Timer secondTimer;
+
+        public GameRound gameRound;
+
+        public GameInfo GameInfo;
 
         public GameLogic()
         {
@@ -72,15 +71,15 @@ namespace EnFutureTowerXm
 
 
             gameState = GameState.WAITING_1;
-            finder = new ActorFinder();
-            finder.FindStart();
-
+          
             secondTimer = new Timer(1000);
             secondTimer.Elapsed += SecondTimer_Elapsed;
             secondTimer.Start();
 
             currentAttackersCount = 0;
             currentDefendersCount = 0;
+
+            GameInfo = new GameInfo(0, 0, 0,0);
 
             timings = new Dictionary<GameState, int>
             {
@@ -97,7 +96,15 @@ namespace EnFutureTowerXm
             ///GameStateChanged(this, new GameStateChangedEventArgs(gameState));
 
         }
+        /*
+        private void Finder_ActorsFound(object sender, ActorsFoundEventArgs e)
+        {
 
+            Tick(e.Actors);
+
+
+        }
+        */
         private void SecondTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             currentGameTime++;
@@ -105,44 +112,48 @@ namespace EnFutureTowerXm
             {
                 NextState();
             }
-            Tick();
+            GameInfo = (gameRound == null) ? new GameInfo(0, 0, 0, 0) : gameRound.GameInfo;
+            //Tick();
         }
-
+       
         private void NextState()
         {
-            GameStateChanged(this, new GameStateChangedEventArgs(gameState));
+            
             currentGameTime = 0;
             switch (gameState)
             {
                 case GameState.WAITING_1:
                     gameState = GameState.PLAY_1;
-                    station = new Station();
+                    // station = new Station();
+                    gameRound = new GameRound();
                     break;
                 case GameState.PLAY_1:
                     gameState = GameState.WAITING_2;
-                    station = null;
+                    gameRound = null;
                     break;
                 case GameState.WAITING_2:
                     gameState = GameState.PLAY_2;
-                    station = new Station();
+                    // station = new Station();
+                    gameRound = new GameRound();
                     break;
                 case GameState.PLAY_2:
                     gameState = GameState.WAITING_3;
-                    station = null;
+                    gameRound = null;
                     break;
                 case GameState.WAITING_3:
                     gameState = GameState.PLAY_3;
-                    station = new Station();
-                    break;
+                    // station = new Station();
+                    gameRound = new GameRound(); break;
                 case GameState.PLAY_3:
                     gameState = GameState.FINAL;
-                    station = null;
+                    gameRound = null;
                     break;
                 case GameState.FINAL:
-                    station = null;
+                    gameRound = null;
                     break;
 
             }
+            GameStateChanged(this, new GameStateChangedEventArgs(gameState));
         }
 
 
@@ -161,9 +172,9 @@ namespace EnFutureTowerXm
 
 
 
-
+/*
         // Call every game cycle
-        public void Tick()
+        public void Tick(Dictionary<string,IActor> actors)
         {
             if (station == null)
             {
@@ -176,9 +187,9 @@ namespace EnFutureTowerXm
                 );
                 return;
             }
-            finder.Update();
-            actors = new List<IActor>(finder.GetActors().Values);
-            currentForce = GetCurrentForce(actors);
+            ///finder.Update();
+            var actorsList = new List<IActor>(actors.Values);
+            currentForce = GetCurrentForce(actorsList);
             if (currentForce == 0)
             {
                 return;
@@ -226,14 +237,15 @@ namespace EnFutureTowerXm
                 )
            );
 
+            this.currentAttackersCount = currentAttackersCount;
+            this.currentDefendersCount = currentDefendersCount;
+            this.currentForce = _currentForce;
+
             //     GameTick(this, new GameTickEventArgs(3, 4, 5));
 
-            /*
-             * Aplly artefactes
-             */
             return _currentForce;
         }
-
+    */
 
 
     }

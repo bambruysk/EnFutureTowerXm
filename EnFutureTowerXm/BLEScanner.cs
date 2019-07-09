@@ -17,15 +17,33 @@ namespace EnFutureTowerXm
 {
 
 
+    public class ScanTimoutEventArgs
+    {
+        public List<BLEDeviceView> DevList;
+
+        public ScanTimoutEventArgs(List<BLEDeviceView> devList)
+        {
+            DevList = devList;
+        }
+    }
+
+
     // TODO change to static or singletone
     // And rewrite this full
-    
+
+
+
+
     public class BLEScanner
     {
         private Timer timer;
         private IBluetoothLE ble;
         public Plugin.BLE.Abstractions.Contracts.IAdapter adapter;
         private List<BLEDeviceView> deviceList;
+
+        public delegate void ScanTimoutHandler(object sender, ScanTimoutEventArgs e);
+
+        public event ScanTimoutHandler ScanTimout;
 
         public int MinRssi;
 
@@ -38,33 +56,52 @@ namespace EnFutureTowerXm
                 Interval = 1000
             };
             timer.Elapsed += OnTimerTick;
+            timer.Start();
 
             ble = CrossBluetoothLE.Current;
             adapter = ble.Adapter;
             deviceList = new List<BLEDeviceView>();
 
-            MinRssi = -100;
+            MinRssi = -70;
+            adapter.DeviceDiscovered += Adapter_DeviceDiscovered;
+            adapter.ScanTimeout = 2500;
+            adapter.ScanTimeoutElapsed += Adapter_ScanTimeoutElapsed;
 
-            adapter.DeviceDiscovered += (s, a) =>
+
+            //System.Threading.Tasks.Task.Run(() => adapter.StartScanningForDevicesAsync());
+        }
+
+        private async void Adapter_ScanTimeoutElapsed(object sender, EventArgs e)
+        {
+            if (!ble.Adapter.IsScanning)
             {
-                Console.WriteLine("DeviceFound");
+                await adapter.StartScanningForDevicesAsync();
+            }
+            ScanTimout(this, new ScanTimoutEventArgs(deviceList));
+            //deviceList.Clear();
+            ProcessDevices();
 
-                if (a.Device.Rssi >= MinRssi)
+        }
+
+        private void Adapter_DeviceDiscovered(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
+        {
+            Console.WriteLine("DeviceFound {0} ", e.Device.Id);
+
+            if (e.Device.Rssi >= MinRssi)
+            {
+                if (deviceList.Exists(d => d.id == e.Device.Id))
                 {
-                    if (deviceList.Exists(d => d.id == a.Device.Id))
-                    {
 
-                        var dev = deviceList.Find(d => d.id == a.Device.Id);
-                        dev.UpdateCountdown();
-                        dev.RSSI = a.Device.Rssi;
+                    var dev = deviceList.Find(d => d.id == e.Device.Id);
+                    dev.UpdateCountdown();
+                    dev.RSSI = e.Device.Rssi;
 
-                    }
-                    else
-                    {
-                        deviceList.Add(new BLEDeviceView(a.Device));
-                    }
                 }
-            };
+                else
+                {
+                    deviceList.Add(new BLEDeviceView(e.Device));
+                }
+            }
         }
 
         public void StartScan()
@@ -82,7 +119,7 @@ namespace EnFutureTowerXm
             {
                 await adapter.StartScanningForDevicesAsync();
             }
-            // ProcessDevices();
+
         }
 
         public void ResumeScan()

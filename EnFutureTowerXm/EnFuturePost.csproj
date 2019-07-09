@@ -11,7 +11,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EnFutureTowerXm</RootNamespace>
-    <AssemblyName>EnFutureTowerXm</AssemblyName>
+    <AssemblyName>EnFuturePost</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AndroidApplication>True</AndroidApplication>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
@@ -71,7 +71,9 @@
     <Compile Include="ChronometerControl.cs" />
     <Compile Include="DeviceDatabase.cs" />
     <Compile Include="DeviceTableRow.cs" />
+    <Compile Include="GameInfo.cs" />
     <Compile Include="GameLogic.cs" />
+    <Compile Include="GameRound.cs" />
     <Compile Include="GameSession.cs" />
     <Compile Include="GameStateChangedEventArgs.cs" />
     <Compile Include="GameTickEventArgs.cs" />
